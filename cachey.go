@@ -1,8 +1,13 @@
 package cachey
 
-import "time"
+import (
+	"time"
+
+	"github.com/codemaestro64/cachey/store"
+)
 
 type Cache struct {
+	store store.Store
 }
 
 func New(providerName string) (*Cache, error) {
