@@ -27,15 +27,8 @@ func (s *MemoryStore) Get(key string) any {
 
 	return item.Value()
 }
-func (s *MemoryStore) Put(key string, data any, duration int) {
-	var ttl time.Duration
-	if duration > 0 {
-		ttl = time.Second * time.Duration(duration)
-	} else {
-		ttl = ttlcache.NoTTL
-	}
-
-	s.store.Set(key, data, ttl)
+func (s *MemoryStore) Put(key string, data any, duration time.Duration) {
+	s.store.Set(key, data, duration)
 }
 func (s *MemoryStore) Delete(key string) {
 	s.store.Delete(key)
