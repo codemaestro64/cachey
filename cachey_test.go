@@ -4,7 +4,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/codemaestro64/cachey/store"
+	"github.com/codemaestro64/cachey/store/memory"
 )
 
 func TestNewCache(t *testing.T) {
@@ -18,7 +18,7 @@ func TestNewCache(t *testing.T) {
 }
 
 func TestCache_PutAndGet(t *testing.T) {
-	memStore, _ := store.NewMemoryStore()
+	memStore, _ := memory.NewMemoryStore()
 	cache := &Cache{store: memStore}
 
 	cache.Put("key1", "value1", 0)
@@ -29,7 +29,7 @@ func TestCache_PutAndGet(t *testing.T) {
 }
 
 func TestCache_Has(t *testing.T) {
-	memStore, _ := store.NewMemoryStore()
+	memStore, _ := memory.NewMemoryStore()
 	cache := &Cache{store: memStore}
 
 	cache.Put("key1", "value1", 0)
@@ -42,7 +42,7 @@ func TestCache_Has(t *testing.T) {
 }
 
 func TestCache_Forget(t *testing.T) {
-	memStore, _ := store.NewMemoryStore()
+	memStore, _ := memory.NewMemoryStore()
 	cache := &Cache{store: memStore}
 
 	cache.Put("key1", "value1", 0)
@@ -53,7 +53,7 @@ func TestCache_Forget(t *testing.T) {
 }
 
 func TestCache_Flush(t *testing.T) {
-	memStore, _ := store.NewMemoryStore()
+	memStore, _ := memory.NewMemoryStore()
 	cache := &Cache{store: memStore}
 
 	cache.Put("key1", "value1", 0)
@@ -64,7 +64,7 @@ func TestCache_Flush(t *testing.T) {
 }
 
 func TestCache_GetOrDefault(t *testing.T) {
-	memStore, _ := store.NewMemoryStore()
+	memStore, _ := memory.NewMemoryStore()
 	cache := &Cache{store: memStore}
 	defaultValue := "default"
 
@@ -75,10 +75,10 @@ func TestCache_GetOrDefault(t *testing.T) {
 }
 
 func TestCache_Remember(t *testing.T) {
-	memStore, _ := store.NewMemoryStore()
+	memStore, _ := memory.NewMemoryStore()
 	cache := &Cache{store: memStore}
 
-	value := cache.Remember("key1", time.Second, func() any { return "rememberedValue" })
+	value, err := cache.Remember("key1", time.Second, func() any { return "rememberedValue" })
 	if value != "rememberedValue" {
 		t.Fatalf("expected rememberedValue, got %v", value)
 	}

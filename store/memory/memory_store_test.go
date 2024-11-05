@@ -1,4 +1,4 @@
-package store
+package memory
 
 import (
 	"testing"
@@ -20,14 +20,14 @@ func TestMemoryStore_PutAndGet(t *testing.T) {
 
 	store.Put(key, value, duration)
 
-	retrievedValue := store.Get(key)
+	retrievedValue, _ := store.Get(key)
 	if retrievedValue != value {
 		t.Errorf("Expected %v, got %v", value, retrievedValue)
 	}
 
 	// Wait for expiration
 	time.Sleep(duration + 2*time.Second)
-	retrievedValue = store.Get(key)
+	retrievedValue, _ = store.Get(key)
 	if retrievedValue != nil {
 		t.Errorf("Expected nil after expiration, got %v", retrievedValue)
 	}
@@ -40,13 +40,15 @@ func TestMemoryStore_Has(t *testing.T) {
 	duration := 1 * time.Second
 
 	store.Put(key, value, duration)
-	if !store.Has(key) {
+	has, _ := store.Has(key)
+	if !has {
 		t.Errorf("Expected true, got false")
 	}
 
 	// Wait for expiration
 	time.Sleep(duration + 2*time.Second)
-	if store.Has(key) {
+	has, _ = store.Has(key)
+	if has {
 		t.Errorf("Expected false after expiration, got true")
 	}
 }
@@ -58,7 +60,8 @@ func TestMemoryStore_Delete(t *testing.T) {
 	store.Put(key, value, time.Minute)
 
 	store.Delete(key)
-	if store.Has(key) {
+	has, _ := store.Has(key)
+	if has {
 		t.Errorf("Expected false after deletion, got true")
 	}
 }
@@ -69,7 +72,9 @@ func TestMemoryStore_Flush(t *testing.T) {
 	store.Put("key2", "value2", time.Minute)
 
 	store.Flush()
-	if store.Has("key1") || store.Has("key2") {
+	has1, _ := store.Has("key1")
+	has2, _ := store.Has("key2")
+	if has1 || has2 {
 		t.Errorf("Expected both keys to be deleted after flush")
 	}
 }
