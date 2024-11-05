@@ -12,35 +12,51 @@ type Cache struct {
 	store store.Store // The underlying store for caching data.
 }
 
-// Supported cache provider constants.
+// Supported cache store constants.
 const (
-	MemoryStore = "memory" // Name of the memory store provider.
+	MemoryStore = "memory" // Name of the memory store.
 
 	ForeverDuration = -1 // Duration to store data indefinitely.
 )
 
-// stores maps provider names to their corresponding store constructors.
-var stores = map[string]func() store.Store{
+type StoreConstructorFunc func() (store.Store, error)
+
+// stores maps store names to their corresponding store constructors.
+var stores = map[string]StoreConstructorFunc{
 	MemoryStore: store.NewMemoryStore, // Registering the memory store.
 }
 
-// New initializes a new Cache instance using the specified provider name.
-// It returns an error if the provider is not registered.
-func New(providerName string) (*Cache, error) {
-	storeConstructor, ok := stores[providerName]
+// New initializes a new Cache instance using the specified store name.
+// It returns an error if the store is not registered.
+func New(storeName string, options ...store.Option) (*Cache, error) {
+	storeConstructor, ok := stores[storeName]
 	if !ok {
-		return nil, fmt.Errorf("cache provider `%s` is not registered", providerName)
+		return nil, fmt.Errorf("cache store `%s` is not registered", storeName)
 	}
-	return &Cache{store: storeConstructor()}, nil
+
+	store, err := storeConstructor()
+	if err != nil {
+		return nil, fmt.Errorf("error initializing store %s: %v", storeName, err)
+	}
+
+	// apply options to the store
+	for _, option := range options {
+		err := option(store)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return &Cache{store: store}, nil
 }
 
-// RegisterProvider registers a new cache provider with the given name and constructor function.
-// Returns an error if the provider is already registered.
-func RegisterProvider(providerName string, providerFunc func() store.Store) error {
-	if _, exists := stores[providerName]; exists {
-		return fmt.Errorf("cache provider `%s` is already registered", providerName)
+// Registerstore registers a new cache store with the given name and constructor function.
+// Returns an error if the store is already registered.
+func RegisterStore(storeName string, constructorFunc StoreConstructorFunc) error {
+	if _, exists := stores[storeName]; exists {
+		return fmt.Errorf("cache store `%s` is already registered", storeName)
 	}
-	stores[providerName] = providerFunc
+	stores[storeName] = constructorFunc
 	return nil
 }
 

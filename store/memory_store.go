@@ -10,10 +10,10 @@ type MemoryStore struct {
 	store *ttlcache.Cache[string, any]
 }
 
-func NewMemoryStore() Store {
+func NewMemoryStore() (Store, error) {
 	return &MemoryStore{
 		store: ttlcache.New[string, any](),
-	}
+	}, nil
 }
 
 func (s *MemoryStore) Has(key string) bool {

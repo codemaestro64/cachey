@@ -6,14 +6,14 @@ import (
 )
 
 func TestNewMemoryStore(t *testing.T) {
-	store := NewMemoryStore()
+	store, _ := NewMemoryStore()
 	if store == nil {
 		t.Fatal("Expected new MemoryStore, got nil")
 	}
 }
 
 func TestMemoryStore_PutAndGet(t *testing.T) {
-	store := NewMemoryStore()
+	store, _ := NewMemoryStore()
 	key := "testKey"
 	value := "testValue"
 	duration := 1 * time.Second
@@ -34,7 +34,7 @@ func TestMemoryStore_PutAndGet(t *testing.T) {
 }
 
 func TestMemoryStore_Has(t *testing.T) {
-	store := NewMemoryStore()
+	store, _ := NewMemoryStore()
 	key := "testKey"
 	value := "testValue"
 	duration := 1 * time.Second
@@ -52,7 +52,7 @@ func TestMemoryStore_Has(t *testing.T) {
 }
 
 func TestMemoryStore_Delete(t *testing.T) {
-	store := NewMemoryStore()
+	store, _ := NewMemoryStore()
 	key := "testKey"
 	value := "testValue"
 	store.Put(key, value, time.Minute)
@@ -64,7 +64,7 @@ func TestMemoryStore_Delete(t *testing.T) {
 }
 
 func TestMemoryStore_Flush(t *testing.T) {
-	store := NewMemoryStore()
+	store, _ := NewMemoryStore()
 	store.Put("key1", "value1", time.Minute)
 	store.Put("key2", "value2", time.Minute)
 

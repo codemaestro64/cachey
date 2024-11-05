@@ -22,3 +22,5 @@ type Store interface {
 	// Flush removes all values from the store.
 	Flush()
 }
+
+type Option func(store Store) error
