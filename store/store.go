@@ -7,7 +7,7 @@ import (
 // Store defines the methods required for a caching store.
 type Store interface {
 	// Init initializes the store, readying it for use
-	Init()
+	Init() error
 
 	// Has checks if a value exists in the store for the given key.
 	Has(key string) (bool, error)

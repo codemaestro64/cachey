@@ -11,14 +11,14 @@ type MemoryStore struct {
 	store *ttlcache.Cache[string, any]
 }
 
-func NewMemoryStore() (store.Store, error) {
+func NewMemoryStore() store.Store {
 	return &MemoryStore{
 		store: ttlcache.New[string, any](),
-	}, nil
+	}
 }
 
-func (s *MemoryStore) Init() {
-
+func (s *MemoryStore) Init() error {
+	return nil
 }
 
 func (s *MemoryStore) Has(key string) (bool, error) {

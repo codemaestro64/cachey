@@ -23,7 +23,7 @@ type RedisStore struct {
 	store  *redis.Client
 }
 
-func NewRedisStore() (store.Store, error) {
+func NewRedisStore() store.Store {
 	defaultConfig := config{
 		address:      "localhost:6379",
 		password:     "",
@@ -33,21 +33,26 @@ func NewRedisStore() (store.Store, error) {
 		writeTimeout: 10 * time.Second,
 	}
 
-	s := &RedisStore{
+	return &RedisStore{
 		config: &defaultConfig,
 		store:  redis.NewClient(&redis.Options{}),
 	}
-
-	return s, nil
 }
 
-func (s *RedisStore) Init() {
+func (s *RedisStore) Init() error {
 	s.store.Options().Addr = s.config.address
 	s.store.Options().Password = s.config.password
 	s.store.Options().DB = s.config.db
 	s.store.Options().MaxRetries = s.config.maxRetries
 	s.store.Options().ReadTimeout = s.config.readTimeout
 	s.store.Options().WriteTimeout = s.config.writeTimeout
+
+	err := s.store.Ping(context.Background()).Err()
+	if err != nil {
+		return fmt.Errorf("redis store: error pinging server: %v", err)
+	}
+
+	return nil
 }
 
 func (s *RedisStore) Has(key string) (bool, error) {

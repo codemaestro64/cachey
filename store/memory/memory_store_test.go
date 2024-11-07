@@ -3,78 +3,72 @@ package memory
 import (
 	"testing"
 	"time"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestNewMemoryStore(t *testing.T) {
-	store, _ := NewMemoryStore()
-	if store == nil {
-		t.Fatal("Expected new MemoryStore, got nil")
-	}
+	store := NewMemoryStore()
+	assert.NotEqual(t, nil, store)
 }
 
 func TestMemoryStore_PutAndGet(t *testing.T) {
-	store, _ := NewMemoryStore()
+	store := NewMemoryStore()
 	key := "testKey"
 	value := "testValue"
-	duration := 1 * time.Second
 
-	store.Put(key, value, duration)
+	store.Put(key, value, time.Second)
 
-	retrievedValue, _ := store.Get(key)
-	if retrievedValue != value {
-		t.Errorf("Expected %v, got %v", value, retrievedValue)
-	}
+	cachedValue, _ := store.Get(key)
+	assert.Equal(t, value, cachedValue)
 
 	// Wait for expiration
-	time.Sleep(duration + 2*time.Second)
-	retrievedValue, _ = store.Get(key)
-	if retrievedValue != nil {
-		t.Errorf("Expected nil after expiration, got %v", retrievedValue)
-	}
+	time.Sleep(2 * time.Second)
+	exists, _ := store.Has(key)
+	assert.Equal(t, false, exists)
 }
 
 func TestMemoryStore_Has(t *testing.T) {
-	store, _ := NewMemoryStore()
+	store := NewMemoryStore()
 	key := "testKey"
 	value := "testValue"
-	duration := 1 * time.Second
 
-	store.Put(key, value, duration)
-	has, _ := store.Has(key)
-	if !has {
-		t.Errorf("Expected true, got false")
-	}
+	store.Put(key, value, time.Second)
+	exists, _ := store.Has(key)
+	assert.Equal(t, true, exists)
 
 	// Wait for expiration
-	time.Sleep(duration + 2*time.Second)
-	has, _ = store.Has(key)
-	if has {
-		t.Errorf("Expected false after expiration, got true")
-	}
+	time.Sleep(2 * time.Second)
+	exists, _ = store.Has(key)
+	assert.Equal(t, false, exists)
 }
 
 func TestMemoryStore_Delete(t *testing.T) {
-	store, _ := NewMemoryStore()
+	store := NewMemoryStore()
 	key := "testKey"
 	value := "testValue"
 	store.Put(key, value, time.Minute)
 
 	store.Delete(key)
-	has, _ := store.Has(key)
-	if has {
-		t.Errorf("Expected false after deletion, got true")
-	}
+	exists, _ := store.Has(key)
+	assert.Equal(t, false, exists)
 }
 
 func TestMemoryStore_Flush(t *testing.T) {
-	store, _ := NewMemoryStore()
+	store := NewMemoryStore()
 	store.Put("key1", "value1", time.Minute)
 	store.Put("key2", "value2", time.Minute)
 
+	exists1, _ := store.Has("key1")
+	exists2, _ := store.Has("key2")
+
+	assert.Equal(t, true, exists1)
+	assert.Equal(t, true, exists2)
+
 	store.Flush()
+
 	has1, _ := store.Has("key1")
 	has2, _ := store.Has("key2")
-	if has1 || has2 {
-		t.Errorf("Expected both keys to be deleted after flush")
-	}
+	assert.Equal(t, false, has1)
+	assert.Equal(t, false, has2)
 }
