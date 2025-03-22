@@ -2,6 +2,7 @@ package redis
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"time"
 
@@ -35,19 +36,27 @@ func NewRedisStore() store.Store {
 
 	return &RedisStore{
 		config: &defaultConfig,
-		store:  redis.NewClient(&redis.Options{}),
 	}
 }
 
 func (s *RedisStore) Init() error {
-	s.store.Options().Addr = s.config.address
-	s.store.Options().Password = s.config.password
-	s.store.Options().DB = s.config.db
-	s.store.Options().MaxRetries = s.config.maxRetries
-	s.store.Options().ReadTimeout = s.config.readTimeout
-	s.store.Options().WriteTimeout = s.config.writeTimeout
+	if s.config == nil {
+		return errors.New("redis store: configuration is missing")
+	}
 
-	err := s.store.Ping(context.Background()).Err()
+	s.store = redis.NewClient(&redis.Options{
+		Addr:         s.config.address,
+		Password:     s.config.password,
+		DB:           s.config.db,
+		MaxRetries:   s.config.maxRetries,
+		ReadTimeout:  s.config.readTimeout,
+		WriteTimeout: s.config.writeTimeout,
+	})
+
+	ctx, cancel := context.WithTimeout(context.Background(), s.config.readTimeout*time.Second)
+	defer cancel()
+
+	err := s.store.Ping(ctx).Err()
 	if err != nil {
 		return fmt.Errorf("redis store: error pinging server: %v", err)
 	}
@@ -56,7 +65,10 @@ func (s *RedisStore) Init() error {
 }
 
 func (s *RedisStore) Has(key string) (bool, error) {
-	exists, err := s.store.Exists(context.Background(), key).Result()
+	ctx, cancel := context.WithTimeout(context.Background(), s.config.readTimeout*time.Second)
+	defer cancel()
+
+	exists, err := s.store.Exists(ctx, key).Result()
 	if err != nil {
 		return false, fmt.Errorf("redis store: error checking if key exists: %v", err)
 	}
@@ -64,7 +76,10 @@ func (s *RedisStore) Has(key string) (bool, error) {
 	return exists > 0, nil
 }
 func (s *RedisStore) Get(key string) (any, error) {
-	val, err := s.store.Get(context.Background(), key).Result()
+	ctx, cancel := context.WithTimeout(context.Background(), s.config.readTimeout*time.Second)
+	defer cancel()
+
+	val, err := s.store.Get(ctx, key).Result()
 	if err != nil && err != redis.Nil {
 		return nil, fmt.Errorf("redis store: error getting cache data: %v", err)
 	}
@@ -72,7 +87,10 @@ func (s *RedisStore) Get(key string) (any, error) {
 	return val, nil
 }
 func (s *RedisStore) Put(key string, data any, duration time.Duration) error {
-	err := s.store.Set(context.Background(), key, data, duration).Err()
+	ctx, cancel := context.WithTimeout(context.Background(), s.config.writeTimeout*time.Second)
+	defer cancel()
+
+	err := s.store.Set(ctx, key, data, duration).Err()
 	if err != nil {
 		return fmt.Errorf("redis store: error saving item to the store: %v", err)
 	}
@@ -80,7 +98,10 @@ func (s *RedisStore) Put(key string, data any, duration time.Duration) error {
 	return nil
 }
 func (s *RedisStore) Delete(key string) error {
-	err := s.store.Del(context.Background(), key).Err()
+	ctx, cancel := context.WithTimeout(context.Background(), s.config.writeTimeout*time.Second)
+	defer cancel()
+
+	err := s.store.Del(ctx, key).Err()
 	if err != nil {
 		return fmt.Errorf("redis store: error deleting key: %v", err)
 	}
@@ -89,13 +110,13 @@ func (s *RedisStore) Delete(key string) error {
 }
 
 func (s *RedisStore) Flush() error {
-	err := s.store.FlushDB(context.Background()).Err()
+	ctx, cancel := context.WithTimeout(context.Background(), s.config.readTimeout*time.Second)
+	defer cancel()
+
+	err := s.store.FlushDBAsync(ctx).Err()
 	if err != nil {
 		return fmt.Errorf("redis store: error flushing db: %v", err)
 	}
 
 	return nil
-}
-
-func (s *RedisStore) FlushExpired() {
 }
