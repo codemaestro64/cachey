@@ -176,7 +176,7 @@ func (c *Cache) Forget(key string) error {
 	return c.store.Delete(key)
 }
 
-// Flush removes all values from the cache.
+// Flush empties the cache.
 func (c *Cache) Flush() error {
 	return c.store.Flush()
 }
